@@ -123,7 +123,6 @@
 
 <script>
 const WEBHOOK_URL = "https://hook.us2.make.com/o8n8bg5zor12ukh3b2sa1p8o8r23tk4e";
-
 const messagesDiv = document.getElementById("messages");
 
 function addMessage(text, sender) {
@@ -132,6 +131,23 @@ function addMessage(text, sender) {
     msg.innerText = text;
     messagesDiv.appendChild(msg);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function extractAnswer(json) {
+    if (!json) return null;
+
+    // Flexible extraction from any structure
+    if (json.answer) return json.answer;
+    if (json.output?.text) return json.output.text;
+    if (json.response) return json.response;
+    if (json.result) return json.result;
+
+    // Search for any string field
+    for (let key in json) {
+        if (typeof json[key] === "string") return json[key];
+    }
+
+    return null;
 }
 
 async function sendMessage() {
@@ -152,10 +168,15 @@ async function sendMessage() {
             body: JSON.stringify({ question: text })
         });
 
-        let data = await response.json();
+        let raw = await response.text();
+        let data = {};
+
+        try { data = JSON.parse(raw); } catch {}
+
+        const answer = extractAnswer(data);
 
         thinkingBubble.remove();
-        addMessage(data.answer ?? "No pude obtener una respuesta.", "bot");
+        addMessage(answer ?? "El agente no envió una respuesta válida.", "bot");
 
     } catch (err) {
         thinkingBubble.remove();
