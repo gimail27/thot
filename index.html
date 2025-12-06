@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Billing Assistant</title>
+
+<style>
+    body {
+        background: #0d0d0d;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .chat-container {
+        width: 100%;
+        max-width: 420px;
+        height: 600px;
+        background: #1a1a1a;
+        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #2c2c2c;
+        overflow: hidden;
+        box-shadow: 0 0 25px rgba(255, 0, 0, 0.25);
+    }
+
+    .header {
+        background: #111;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        border-bottom: 1px solid #2c2c2c;
+    }
+
+    .messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .msg {
+        padding: 12px 15px;
+        border-radius: 14px;
+        max-width: 80%;
+        font-size: 14px;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .user {
+        background: #e62222;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 0;
+    }
+
+    .bot {
+        background: #2c2c2c;
+        color: #e3e3e3;
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
+    }
+
+    .input-box {
+        display: flex;
+        border-top: 1px solid #2c2c2c;
+        background: #111;
+        padding: 10px;
+    }
+
+    .input-box input {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        outline: none;
+        background: #1a1a1a;
+        color: white;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+
+    .input-box button {
+        margin-left: 10px;
+        padding: 12px 20px;
+        background: #e62222;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: bold;
+        color: white;
+        transition: 0.2s;
+    }
+
+    .input-box button:hover {
+        background: #ff2d2d;
+    }
+
+</style>
+</head>
+
+<body>
+<div class="chat-container">
+    <div class="header">💼 Billing AI Assistant</div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="input-box">
+        <input id="userInput" type="text" placeholder="Escribe tu pregunta..." />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+</div>
+
+<script>
+const WEBHOOK_URL = "https://hook.us2.make.com/o8n8bg5zor12ukh3b2sa1p8o8r23tk4e";
+
+const messagesDiv = document.getElementById("messages");
+
+function addMessage(text, sender) {
+    const msg = document.createElement("div");
+    msg.classList.add("msg", sender);
+    msg.innerText = text;
+    messagesDiv.appendChild(msg);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+async function sendMessage() {
+    let input = document.getElementById("userInput");
+    let text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    input.value = "";
+
+    addMessage("Pensando...", "bot");
+    const thinkingBubble = messagesDiv.lastChild;
+
+    try {
+        let response = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text })
+        });
+
+        let data = await response.json();
+
+        thinkingBubble.remove();
+        addMessage(data.answer ?? "No pude obtener una respuesta.", "bot");
+
+    } catch (err) {
+        thinkingBubble.remove();
+        addMessage("Error conectando con el agente.", "bot");
+    }
+}
+</script>
+</body>
+</html>
